@@ -1,4 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Trip } from '../trips/trip.entity';
+
+export enum DniType {
+  DNI = 'dni',
+  PASSPORT = 'passport',
+  CC = 'c.c',
+}
+
+export enum UserRole {
+  ADMIN = 'admin',
+  JEFE = 'jefe',
+  EMPLEADO = 'empleado',
+}
 
 @Entity('users')
 export class User {
@@ -6,23 +19,20 @@ export class User {
   id: string;
 
   @Column({ unique: true })
+  username: string;
+
+  @Column()
   email: string;
 
   @Column()
-  firstName: string;
-
-  @Column()
-  lastName: string;
-
-  @Column({ select: false })
   password: string;
 
-  @Column({ default: true })
-  isActive: boolean;
+  @OneToMany(() => Trip, (trip) => trip.user)
+  trips: Trip[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  created_at: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
-} 
+  updated_at: Date;
+}
