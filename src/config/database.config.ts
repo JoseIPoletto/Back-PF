@@ -2,7 +2,6 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
 
-// Detectar entorno y cargar el archivo correspondiente
 const envFile = `.env.${process.env.NODE_ENV || 'development'}`;
 dotenv.config({ path: join(__dirname, '../../', envFile) });
 
@@ -18,3 +17,5 @@ export const databaseConfig: TypeOrmModuleOptions = {
   logging: process.env.NODE_ENV !== 'production',
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 };
+
+export default databaseConfig;

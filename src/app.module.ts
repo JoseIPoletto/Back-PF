@@ -15,7 +15,7 @@ import { AuthModule } from './modules/auth/auth.module';
     // Configuración de variables de entorno
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ".env",
+      envFilePath: ".env.development", // Cambia según el entorno
     }),
 
     // Configuración de base de datos
