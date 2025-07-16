@@ -1,4 +1,7 @@
 import { TypeOrmModuleOptions } from "@nestjs/typeorm";
+import * as dotenv from 'dotenv';
+dotenv.config();
+console.log('DB_PASSWORD desde dotenv:', process.env.DB_PASSWORD); 
 
 export const databaseConfig: TypeOrmModuleOptions = {
   type: "postgres",
