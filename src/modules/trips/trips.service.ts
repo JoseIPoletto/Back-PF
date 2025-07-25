@@ -2,24 +2,28 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Between, MoreThan, Repository } from "typeorm";
 import { Trip } from "./trip.entity";
 import { CreateTripDTO } from "./dtos/trip.dto";
-
+import { LessThanOrEqual } from "typeorm";
 import { Provider } from "../providers/Entities/provider.entity";
 import { CreateProviderDTO } from "../providers/dtos/create-provider.dto";
 import { ProviderPicture } from "../providers/Entities/provider-pictures.entity";
 import { CreateProductDto } from "@/products/dto/create-product.dto";
 import { Product } from "@/products/entities/product.entity";
 import { User } from "../users/user.entity";
+import { UpdateTripDTO } from "./dtos/update-trip.dto";
+import { NotificationsGateway } from "../notifications/notifications.gateway";
 
 @Injectable()
 export class TripsService {
   constructor(
     @InjectRepository(Trip)
     private readonly tripsRepository: Repository<Trip>,
+    private readonly notificationsGateway: NotificationsGateway,
     @InjectRepository(Provider)
     private readonly providersRepository: Repository<Provider>,
     @InjectRepository(ProviderPicture)
@@ -76,18 +80,25 @@ export class TripsService {
     });
   }
 
-  async createProduct(tripId: string, createProductDto: CreateProductDto) {
-    console.log("Creating product for trip ID:", tripId);
+  async createProduct(
+    tripId: string,
+    createProductDto: CreateProductDto,
+    userId: string
+  ) {
+    if (!userId) {
+      throw new UnauthorizedException(
+        "The authenticated user could not be determined"
+      );
+    }
 
-    const findTrip = await this.tripsRepository.findOneBy({
-      id: tripId,
-    });
+    const findTrip = await this.tripsRepository.findOneBy({ id: tripId });
 
     if (!findTrip) throw new NotFoundException("Trip not found");
 
     const newProduct = this.productsRepository.create({
       ...createProductDto,
       trip: findTrip,
+      user: { id: userId }, // ← Vincula el producto con el usuario
     });
 
     await this.productsRepository.save(newProduct);
@@ -98,16 +109,20 @@ export class TripsService {
     });
   }
 
-  async createProviders(id: string, createProviderDto: CreateProviderDTO) {
+  async createProviders(
+    tripId: string,
+    createProviderDto: CreateProviderDTO,
+    userId: string
+  ) {
     const findTrip = await this.tripsRepository.findOneBy({
-      id: id,
+      id: tripId,
     });
 
     if (!findTrip) throw new NotFoundException("Trip not found");
 
     const findNameProvider = await this.providersRepository.findOneBy({
       name: createProviderDto.name,
-      trip: { id: id },
+      trip: { id: tripId },
     });
 
     if (findNameProvider)
@@ -119,6 +134,7 @@ export class TripsService {
       ...providerData,
       phone_number: String(createProviderDto.phone_number),
       trip: findTrip,
+      user: { id: userId },
     });
 
     const savedProvider = await this.providersRepository.save(newProvider);
@@ -135,7 +151,7 @@ export class TripsService {
     }
 
     return await this.tripsRepository.findOne({
-      where: { id },
+      where: { id: tripId },
       relations: { providers: { pictures: true } },
     });
   }
@@ -164,21 +180,39 @@ export class TripsService {
     return await this.tripsRepository.save(trip);
   }
 
-  async updateTrip(tripId: string, createTripDto: CreateTripDTO) {
-    const findTrip = await this.tripsRepository.findOneBy({
-      id: tripId,
+  async updateTrip(tripId: string, updateTripDto: UpdateTripDTO) {
+    const findTrip = await this.tripsRepository.findOne({
+      where: { id: tripId },
+      relations: ["user"],
     });
 
     if (!findTrip) throw new NotFoundException("Trip not found");
 
-    await this.tripsRepository.update(tripId, createTripDto);
+    if (updateTripDto.name && updateTripDto.name !== findTrip.name) {
+      const existingTrip = await this.tripsRepository.findOne({
+        where: {
+          name: updateTripDto.name,
+          user: { id: findTrip.user.id },
+        },
+      });
 
-    return createTripDto;
+      if (existingTrip) {
+        throw new BadRequestException("Trip name already exists for this user");
+      }
+    }
 
-    // await this.tripsRepository.update(tripId, {
-    //   ...createTripDto,
-    //   date: new Date(createTripDto.date),
-    // });
+    const updatedTrip = {
+      ...findTrip,
+      ...updateTripDto,
+      date: updateTripDto.date ? new Date(updateTripDto.date) : findTrip.date,
+      updatedAt: new Date(),
+    };
+
+    await this.tripsRepository.update(tripId, updatedTrip);
+
+    return this.tripsRepository.findOneBy({
+      id: tripId,
+    });
   }
 
   async findById(tripId: string) {
@@ -188,5 +222,21 @@ export class TripsService {
     });
     if (!trip) throw new NotFoundException("Trip not found");
     return trip;
+  }
+
+  async getViajeProximo(userId: string) {
+    const now = new Date ();
+    const tresDiasDespues = new Date();
+    tresDiasDespues.setDate(tresDiasDespues.getDate() + 3);
+
+    return await this.tripsRepository.findOne({
+      where: {
+        user: { id: userId },
+        date: Between(now, tresDiasDespues),
+      },
+      order: {
+        date: "ASC",
+      },
+    },);
   }
 }
