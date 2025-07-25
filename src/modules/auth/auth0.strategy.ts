@@ -129,4 +129,4 @@ export class Auth0Strategy extends PassportStrategy(Strategy, 'auth0') {
     console.log('✅ [AUTH0] Token válido para usuario:', payload.sub);
     return payload;
   }
-} 
+}

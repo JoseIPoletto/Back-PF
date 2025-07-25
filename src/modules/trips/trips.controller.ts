@@ -7,6 +7,7 @@ import {
   UseGuards,
   Put,
   Query,
+  Req,
 } from "@nestjs/common";
 import { TripsService } from "./trips.service";
 import { CreateTripDTO } from "./dtos/trip.dto";
@@ -31,6 +32,7 @@ import { MultiAuthGuard } from "../auth/multi-auth.guard";
 import { Roles } from "@/decorators/roles.decorator";
 import { Role } from "@/roles.enum";
 import { RolesGuard } from "../auth/roles.guard";
+import { UpdateTripDTO } from "./dtos/update-trip.dto";
 
 @ApiTags("Trips")
 @Controller("trips")
@@ -448,9 +450,15 @@ export class TripsController {
   })
   async createProduct(
     @Param("tripId") tripId: string,
-    @Body() createProductDto: CreateProductDto
+    @Body() createProductDto: CreateProductDto,
+    @Req() req: any
   ) {
-    return await this.tripsService.createProduct(tripId, createProductDto);
+    const userId = req.user?.userId;
+    return await this.tripsService.createProduct(
+      tripId,
+      createProductDto,
+      userId
+    );
   }
 
   @Post(":tripId/providers")
@@ -565,10 +573,16 @@ export class TripsController {
     },
   })
   async createProviders(
-    @Param("tripId") id: string,
-    @Body() createProviderDto: CreateProviderDTO
+    @Param("tripId") tripId: string,
+    @Body() createProviderDto: CreateProviderDTO,
+    @Req() req: any
   ) {
-    return await this.tripsService.createProviders(id, createProviderDto);
+    const userId = req.user?.userId;
+    return await this.tripsService.createProviders(
+      tripId,
+      createProviderDto,
+      userId
+    );
   }
 
   @Post(":userId")
@@ -757,8 +771,8 @@ export class TripsController {
   })
   async updateTrip(
     @Param("tripId") tripId: string,
-    @Body() createTripDto: CreateTripDTO // Recomendado cambiar a UpdateTripDTO
+    @Body() updateTripDto: UpdateTripDTO
   ) {
-    return await this.tripsService.updateTrip(tripId, createTripDto);
+    return await this.tripsService.updateTrip(tripId, updateTripDto);
   }
 }
