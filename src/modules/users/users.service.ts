@@ -13,8 +13,13 @@ export class UsersService {
   ) {}
 
   async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
-  }
+  return this.usersRepository.find({
+    order: {
+      created_at: 'ASC',
+      id: 'ASC', // puedes cambiar por el campo que consideres más adecuado
+    },
+  });
+}
 
   async findOne(id: string): Promise<User> {
     return this.usersRepository.findOne({ where: { id } });
