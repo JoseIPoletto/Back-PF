@@ -6,7 +6,7 @@ import {
   Get,
   Request,
 } from "@nestjs/common";
-import { ApiTags, ApiExtraModels, ApiBearerAuth } from "@nestjs/swagger";
+import { ApiTags, ApiExtraModels, ApiBearerAuth, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";
 import { RegisterUserDto } from "./dto/register-user.dto";
 import { LoginUserDto } from "./dto/login-user.dto";
@@ -19,6 +19,7 @@ import {
   TestAuth0Doc,
   Auth0StatusDoc,
 } from "@/swagger-docs/auth.docs";
+import { AuthGuard } from "@nestjs/passport";
 
 @ApiTags("auth")
 @ApiExtraModels(User)
@@ -383,7 +384,6 @@ export class AuthController {
         clientId: process.env.AUTH0_CLIENT_ID,
         hasSecret: !!process.env.AUTH0_CLIENT_SECRET
       }
->>>>>>> main
     };
   }
 }
