@@ -18,7 +18,7 @@ import {
   ApiParam,
 } from "@nestjs/swagger";
 
-@ApiTags("File Upload")
+@ApiTags("File Upload") // Grupo en Swagger
 @Controller("files")
 export class FileUploadController {
   constructor(private fileUploadService: FileUploadService) {}
@@ -26,7 +26,7 @@ export class FileUploadController {
   @Post("/uploadImage/:id")
   @UseInterceptors(FileInterceptor("file"))
   @ApiOperation({ summary: "Subir imagen de perfil" })
-  @ApiConsumes("multipart/form-data")
+  @ApiConsumes("multipart/form-data") // Swagger lo reconoce como carga de archivos
   @ApiParam({ name: "id", type: String, description: "ID del usuario" })
   @ApiBody({
     schema: {
@@ -51,11 +51,11 @@ export class FileUploadController {
             fileType: /^image\/(jpeg|png|bmp|webp|svg\+xml)$/i,
           }),
         ],
-      }),
+      })
     )
     file: Express.Multer.File,
 
-    @Param("id") id: string,
+    @Param("id") id: string // corregido a minúscula para coincidir con la ruta
   ) {
     return this.fileUploadService.uploadImage(file, id);
   }
