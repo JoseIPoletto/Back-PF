@@ -85,7 +85,11 @@ export class AuthService {
   } catch (error) {
     console.error("Error buscando viaje próximo:", error);
   }
-
+try {
+  this.tripsService.iniciarNotificaciones(user.id);
+} catch (error) {
+  console.error("❌ Error al iniciar notificaciones:", error);
+}
     // Devolver todos los datos del usuario (sin la contraseña) junto con el token
     const { password, ...userWithoutPassword } = user;
     return {
