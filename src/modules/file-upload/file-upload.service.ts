@@ -25,7 +25,8 @@ export class FileUploadService {
       Image_Profile: uploadResponse.url,
     });
 
-    return await this.usersRepository.findOneBy({ id: Id });
+    return await this.usersRepository.findOneBy({
+      id: Id,
+    });
   }
 }
-

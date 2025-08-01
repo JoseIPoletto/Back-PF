@@ -8,7 +8,6 @@ import {
   Request,
 } from "@nestjs/common";
 import { ApiTags, ApiExtraModels, ApiBearerAuth, ApiOperation, ApiResponse } from "@nestjs/swagger";
-import { AuthGuard } from "@nestjs/passport";
 import { AuthService } from "./auth.service";
 import { RegisterUserDto } from "./dto/register-user.dto";
 import { LoginUserDto } from "./dto/login-user.dto";
@@ -20,8 +19,8 @@ import {
   GetProfileDoc,
   TestAuth0Doc,
   Auth0StatusDoc,
-} from "../../swagger-docs/auth.docs";
-import { HttpCode, HttpStatus } from '@nestjs/common';
+} from "@/swagger-docs/auth.docs";
+import { AuthGuard } from "@nestjs/passport";
 
 @ApiTags("auth")
 @ApiExtraModels(User)
@@ -36,7 +35,6 @@ export class AuthController {
   }
 
   @Post("login")
-  @HttpCode(HttpStatus.OK)
   @LoginDoc()
   async login(@Body() loginDto: LoginUserDto) {
     return this.authService.login(loginDto);

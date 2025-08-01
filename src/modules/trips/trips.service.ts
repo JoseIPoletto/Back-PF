@@ -12,14 +12,16 @@ import { CreateTripDTO } from "./dtos/trip.dto";
 import { Provider } from "../providers/Entities/provider.entity";
 import { CreateProviderDTO } from "../providers/dtos/create-provider.dto";
 import { ProviderPicture } from "../providers/Entities/provider-pictures.entity";
-import { CreateProductDto } from "../../products/dto/create-product.dto";
-import { Product } from "../../products/entities/product.entity";
+import { CreateProductDto } from "@/products/dto/create-product.dto";
+import { Product } from "@/products/entities/product.entity";
 import { User } from "../users/user.entity";
 import { UpdateTripDTO } from "./dtos/update-trip.dto";
+import { ProductPicture } from "@/products/entities/product-pictures.entity";
 import { NotificationsGateway } from "../notifications/notifications.gateway";
 
 @Injectable()
 export class TripsService {
+  private notificationIntervals = new Map<string, NodeJS.Timeout>();
   constructor(
     @InjectRepository(Trip)
     private readonly tripsRepository: Repository<Trip>,
@@ -103,7 +105,7 @@ export class TripsService {
 
     const savedProduct = await this.productsRepository.save(newProduct);
 
-    // 🔔 NOTIFICACIÓN PARA PRODUCTO CREADO
+    //  PRODUCTO 
     console.log('📦 Emitiendo notificación para nuevo producto:', savedProduct.name);
     this.notificationsGateway.notifyUser(
       userId,
@@ -157,7 +159,7 @@ export class TripsService {
       await this.providersPicturesRepository.save(pictureEntities);
     }
 
-    // 🔔 NOTIFICACIÓN PARA PROVEEDOR CREADO  
+    //  PROVEEDOR 
     console.log('🏢 Emitiendo notificación para nuevo proveedor:', savedProvider.name);
     this.notificationsGateway.notifyUser(
       userId,
@@ -192,13 +194,6 @@ export class TripsService {
     });
 
     const savedTrip = await this.tripsRepository.save(trip);
-
-    // 🔔 NOTIFICACIÓN PARA VIAJE CREADO
-    // console.log('✈️ Emitiendo notificación para nuevo viaje:', savedTrip.name);
-    // this.notificationsGateway.notifyUser(
-    //   userId,
-    //   `Viaje: ${savedTrip.name}`
-    // );
 
     return savedTrip;
   }
@@ -237,7 +232,7 @@ export class TripsService {
       id: tripId,
     });
 
-    // 🔔 NOTIFICACIÓN PARA VIAJE ACTUALIZADO
+
     console.log('🔄 Emitiendo notificación para viaje actualizado:', savedTrip.name);
     this.notificationsGateway.notifyUser(
       findTrip.user.id,
@@ -271,12 +266,11 @@ export class TripsService {
       },
     });
 
-    // 🔔 NOTIFICACIÓN PARA VIAJE PRÓXIMO (si existe)
   if (viajeProximo) {
-  const viajeDate = new Date(viajeProximo.date); // Convertimos a Date
+  const viajeDate = new Date(viajeProximo.date); 
   const diasRestantes = Math.ceil((viajeDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  console.log('⏰ Emitiendo notificación para viaje próximo:', viajeProximo.name);
-  console.log("🧪 viajeProximo:", viajeProximo);
+  console.log(' Emitiendo notificación para viaje próximo:', viajeProximo.name);
+  console.log(" viajeProximo:", viajeProximo);
   
   this.notificationsGateway.notifyUser(
     userId,
@@ -286,5 +280,31 @@ export class TripsService {
 
 return viajeProximo;
 
+  }
+  iniciarNotificaciones(userId: string) {
+    if (this.notificationIntervals.has(userId)) {
+      console.log(`⏳ Ya existe un intervalo activo para ${userId}`);
+      return;
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        await this.getViajeProximo(userId);
+      } catch (error) {
+        console.error(`Error al notificar a ${userId}:`, error);
+      }
+    }, 20000);
+
+    this.notificationIntervals.set(userId, interval);
+    console.log(`✅ Iniciado intervalo de notificación para ${userId}`);
+  }
+
+  detenerNotificaciones(userId: string) {
+    const interval = this.notificationIntervals.get(userId);
+    if (interval) {
+      clearInterval(interval);
+      this.notificationIntervals.delete(userId);
+      console.log(`🛑 Intervalo de notificación detenido para ${userId}`);
+    }
   }
 }

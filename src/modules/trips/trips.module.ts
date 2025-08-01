@@ -9,7 +9,7 @@ import { ProviderPicture } from '../providers/Entities/provider-pictures.entity'
 import { User } from '../users/user.entity';
 import { Product } from '../../products/entities/product.entity';
 import { NotificationsModule } from '../notifications/notifications.module'; // Importar módulo de notificaciones
-
+import { ProductPicture } from "@/products/entities/product-pictures.entity";
 @Module({
   imports: [
     TypeOrmModule.forFeature([Trip, Provider, ProviderPicture, User, Product]),

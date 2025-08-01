@@ -10,6 +10,7 @@ export class FileUpLoadRepository {
         { resource_type: 'auto' },
         (error, result) => {
           if (error) {
+            // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
             reject(error);
           } else {
             resolve(result!);

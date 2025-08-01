@@ -3,17 +3,23 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { User } from "./user.entity";
 import { CreateUserDTO } from "./dto/create-user.dto";
+import { UpdateUserDTO } from "./dto/update-users.dto";
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private usersRepository: Repository<User>
   ) {}
 
   async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
-  }
+  return this.usersRepository.find({
+    order: {
+      created_at: 'ASC',
+      id: 'ASC', // puedes cambiar por el campo que consideres más adecuado
+    },
+  });
+}
 
   async findOne(id: string): Promise<User> {
     return this.usersRepository.findOne({ where: { id } });
@@ -31,15 +37,15 @@ export class UsersService {
     const user = this.usersRepository.create(userData);
     return this.usersRepository.save(user);
   }
-  async update(
-    id: string, 
-    updateDto: Partial<CreateUserDTO>
-  ): Promise<User> {
-
-    const user = await this.findOne(id);
-    Object.assign(user, updateDto)
+  async update(id: string, updateDto: Partial<UpdateUserDTO>): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: { id: id },
+    });
+    if (!user) throw new NotFoundException("usuario no encontrado");
+    Object.assign(user, updateDto);
+    user.updated_at = new Date();
     await this.usersRepository.save(user);
-    return this.findOne(id);
+    return user;
   }
 
   async remove(id: string): Promise<void> {
