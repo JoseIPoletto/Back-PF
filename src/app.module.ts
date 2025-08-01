@@ -96,3 +96,4 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
   providers: [AppService, NotificationsGateway],
 })
 export class AppModule {}
+//..
